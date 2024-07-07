@@ -87,34 +87,15 @@
             overflow: auto;
             background-color: rgba(0,0,0,0.4);
         }
-        .modal-wrapper {
-            position: relative;
-            width: 90%;
-            max-width: 500px;
-            margin: 10% auto;
-        }
         .modal-content {
             background-color: #fefefe;
+            margin: 10% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 100%;
+            width: 90%;
+            max-width: 500px;
             border-radius: 10px;
-            box-sizing: border-box;
-        }
-        .close-btn {
-            position: absolute;
-            top: -15px;
-            right: -15px;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #f44336;
-            color: white;
-            font-size: 20px;
-            line-height: 30px;
-            text-align: center;
-            cursor: pointer;
-            z-index: 2;
+            position: relative;
         }
         #add-note-btn {
             position: fixed;
@@ -206,7 +187,9 @@
                 align-self: flex-end;
             }
             .modal-content {
+                margin: 5% auto;
                 padding: 15px;
+                width: 95%;
             }
             .popup-buttons {
                 flex-wrap: wrap;
@@ -235,50 +218,40 @@
     <button id="add-note-btn">+</button>
 
     <div id="add-note-modal" class="modal">
-        <div class="modal-wrapper">
-            <div class="close-btn">&times;</div>
-            <div class="modal-content">
-                <textarea id="note-input" placeholder="Enter your note"></textarea>
-                <button id="submit-note">Add</button>
-            </div>
+        <div class="modal-content">
+            <textarea id="note-input" placeholder="Enter your note"></textarea>
+            <button id="submit-note">Add</button>
         </div>
     </div>
 
     <div id="view-note-modal" class="modal">
-        <div class="modal-wrapper">
-            <div class="close-btn">&times;</div>
-            <div class="modal-content">
-                <div class="popup-buttons">
-                    <button id="copy-note-btn">Copy</button>
-                    <button id="edit-note-btn">Edit</button>
-                    <button id="delete-note-btn">Delete</button>
-                </div>
-                <div id="view-note-content"></div>
+        <div class="modal-content">
+            <div class="popup-buttons">
+                <button id="copy-note-btn">Copy</button>
+                <button id="edit-note-btn">Edit</button>
+                <button id="delete-note-btn">Delete</button>
             </div>
+            <div id="view-note-content"></div>
         </div>
     </div>
 
     <div id="edit-note-modal" class="modal">
-        <div class="modal-wrapper">
-            <div class="close-btn">&times;</div>
-            <div class="modal-content">
-                <textarea id="edit-note-input"></textarea>
-                <button id="save-edit-btn">Save</button>
-            </div>
+        <div class="modal-content">
+            <textarea id="edit-note-input"></textarea>
+            <button id="save-edit-btn">Save</button>
         </div>
     </div>
 
     <script>
         // Firebase configuration
         const firebaseConfig = {
-            // Your Firebase configuration here
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+          apiKey: "AIzaSyC687c1-DdFmyeQO4VFyMdr6KouOepXxyg",
+          authDomain: "smpforpt.firebaseapp.com",
+          databaseURL: "https://smpforpt-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "smpforpt",
+          storageBucket: "smpforpt.appspot.com",
+          messagingSenderId: "137326016226",
+          appId: "1:137326016226:web:0aac0b01f1936fcd6810bb"
         };
 
         // Initialize Firebase
@@ -304,7 +277,7 @@
 
         let currentUser = 'C-way';
         let showCompleted = false;
-        let currentNoteIndex = null;
+        let currentNoteId = null;
 
         function saveNote(note) {
             return database.ref('notes/' + currentUser).push(note);
@@ -320,8 +293,12 @@
 
         function loadNotes() {
             database.ref('notes/' + currentUser).once('value').then((snapshot) => {
-                const notes = snapshot.val() || {};
-                renderNotes(notes);
+                const notes = snapshot.val();
+                if (!notes) {
+                    initializeDemoNotes().then(() => loadNotes());
+                } else {
+                    renderNotes(notes);
+                }
             });
         }
 
@@ -345,7 +322,7 @@
         async function addNote() {
             const noteText = noteInput.value.trim();
             if (noteText) {
-                const newNote = { text: noteText, complete: false };
+                const newNote = { text: noteText, complete: false, user: currentUser };
                 await saveNote(newNote);
                 noteInput.value = '';
                 addNoteModal.style.display = "none";
@@ -354,7 +331,7 @@
         }
 
         async function deleteNote() {
-            await deleteNoteFromDB(currentNoteIndex);
+            await deleteNoteFromDB(currentNoteId);
             viewNoteModal.style.display = "none";
             loadNotes();
         }
@@ -379,7 +356,7 @@
         }
 
         async function viewNote(id) {
-            currentNoteIndex = id;
+            currentNoteId = id;
             const noteRef = database.ref('notes/' + currentUser + '/' + id);
             noteRef.once('value').then((snapshot) => {
                 const note = snapshot.val();
@@ -389,7 +366,7 @@
         }
 
         async function editNote() {
-            const noteRef = database.ref('notes/' + currentUser + '/' + currentNoteIndex);
+            const noteRef = database.ref('notes/' + currentUser + '/' + currentNoteId);
             noteRef.once('value').then((snapshot) => {
                 const note = snapshot.val();
                 editNoteInput.value = note.text;
@@ -401,7 +378,7 @@
         async function saveEdit() {
             const editedText = editNoteInput.value.trim();
             if (editedText) {
-                const noteRef = database.ref('notes/' + currentUser + '/' + currentNoteIndex);
+                const noteRef = database.ref('notes/' + currentUser + '/' + currentNoteId);
                 noteRef.once('value').then((snapshot) => {
                     const note = snapshot.val();
                     note.text = editedText;
@@ -424,7 +401,7 @@
                         copyBtn.style.backgroundColor = '';
                     }, 2000);
                 })
-                .catch(.catch(err => console.error('Failed to copy note: ', err));
+                .catch(err => console.error('Failed to copy note: ', err));
         }
 
         function changeUser() {
@@ -471,11 +448,11 @@
         deleteNoteBtn.onclick = deleteNote;
         userSelect.onchange = changeUser;
 
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                this.closest('.modal').style.display = "none";
-            });
-        });
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
 
         submitNoteBtn.addEventListener('click', addNote);
         incompleteToggle.addEventListener('click', () => toggleFilter(false));
@@ -483,13 +460,7 @@
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', (event) => {
-            database.ref('notes/' + currentUser).once('value').then((snapshot) => {
-                if (!snapshot.exists()) {
-                    initializeDemoNotes().then(() => loadNotes());
-                } else {
-                    loadNotes();
-                }
-            });
+            loadNotes();
         });
     </script>
 </body>
