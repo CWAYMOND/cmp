@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMP for PT 1.0</title>
+    <title>Notes Dashboard - SKM</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -112,7 +112,7 @@
         }
         #note-input, #edit-note-input {
             width: 100%;
-            height: 100px;
+            height: 200px;
             padding: 10px;
             margin-bottom: 10px;
             font-family: 'Poppins', sans-serif;
@@ -120,6 +120,7 @@
             border-radius: 5px;
             resize: vertical;
             box-sizing: border-box;
+            font-size: 24px;
         }
         .toggle-bar {
             display: flex;
@@ -159,6 +160,19 @@
             border-radius: 5px;
             border: 1px solid #ddd;
             font-family: 'Poppins', sans-serif;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
         }
         @media (max-width: 600px) {
             body {
@@ -202,12 +216,13 @@
     </style>
 </head>
 <body>
-    <h1>SMP for PT 1.0</h1>
+    <h1>Notes Dashboard - SKM</h1>
     <div id="controls">
         <select id="user-select">
             <option value="C-way">C-way</option>
             <option value="Ciel">Ciel</option>
             <option value="Claudia">Claudia</option>
+            <option value="TAs">TAs</option>
         </select>
         <div class="toggle-bar">
             <div class="toggle-option active" id="incomplete-toggle">Incomplete</div>
@@ -219,6 +234,7 @@
 
     <div id="add-note-modal" class="modal">
         <div class="modal-content">
+            <span class="close">&times;</span>
             <textarea id="note-input" placeholder="Enter your note"></textarea>
             <button id="submit-note">Add</button>
         </div>
@@ -226,6 +242,7 @@
 
     <div id="view-note-modal" class="modal">
         <div class="modal-content">
+            <span class="close">&times;</span>
             <div class="popup-buttons">
                 <button id="copy-note-btn">Copy</button>
                 <button id="edit-note-btn">Edit</button>
@@ -237,6 +254,7 @@
 
     <div id="edit-note-modal" class="modal">
         <div class="modal-content">
+            <span class="close">&times;</span>
             <textarea id="edit-note-input"></textarea>
             <button id="save-edit-btn">Save</button>
         </div>
@@ -414,17 +432,18 @@
                 'C-way': [
                     { text: "Complete project proposal\n- Outline objectives\n- Define timeline\n- Estimate budget", complete: false },
                     { text: "Grocery shopping\n- Milk\n- Eggs\n- Bread\n- Fruits and vegetables", complete: true },
-                    { text: "Plan weekend trip\n1. Choose destination\n2. Book accommodations\n3. Plan activities\n4. Pack essentials", complete: false },
-                    { text: "Learn new programming language\n- Complete online course\n- Practice with small projects\n- Join coding community", complete: false },
                     { text: "Fitness goals for the month\n- Run 5k three times a week\n- Attend yoga class every Saturday\n- Meal prep on Sundays", complete: true },
                     { text: "Home improvement tasks\n- Paint living room\n- Fix leaky faucet\n- Organize garage", complete: false },
-                    { text: "Read 'The Great Gatsby' by F. Scott Fitzgerald", complete: false }
                 ],
                 'Ciel': [
                     { text: "Study for exam\n- Review chapters 1-5\n- Complete practice problems\n- Make flashcards", complete: false },
                     { text: "Clean the apartment\n- Vacuum and mop floors\n- Do laundry\n- Clean bathroom", complete: true },
                 ],
                 'Claudia': [
+                    { text: "Prepare presentation for work\n1. Gather data\n2. Create slides\n3. Practice delivery", complete: false },
+                    { text: "Schedule dentist appointment", complete: true },
+                ],
+                'TAs': [
                     { text: "Prepare presentation for work\n1. Gather data\n2. Create slides\n3. Practice delivery", complete: false },
                     { text: "Schedule dentist appointment", complete: true },
                 ]
@@ -448,11 +467,22 @@
         deleteNoteBtn.onclick = deleteNote;
         userSelect.onchange = changeUser;
 
+        // window.onclick = function(event) {
+        //     if (event.target.classList.contains('modal')) {
+        //         event.target.style.display = "none";
+        //     }
+        // }
+
+
+        // Close modal when clicking on "X" or outside the modal
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
+            if (event.target.classList.contains('modal') || event.target.classList.contains('close')) {
+                addNoteModal.style.display = "none";
+                viewNoteModal.style.display = "none";
+                editNoteModal.style.display = "none";
             }
         }
+
 
         submitNoteBtn.addEventListener('click', addNote);
         incompleteToggle.addEventListener('click', () => toggleFilter(false));
